@@ -64,8 +64,6 @@ public class ChooseAreaFragment extends Fragment {
 
     private City selectedCity;
 
-    private County selectedCounty;
-
     private int currentLevel;
 
     @Override
@@ -75,7 +73,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText=(TextView)view.findViewById(R.id.title_text);
         backButton=(Button)view.findViewById(R.id.back_button);
         listView=(ListView)view.findViewById(R.id.list_view);
-        adapter=new ArrayAdapter<String>(getContext(),android.R.layout.simple_list_item_1,dataList);
+        adapter=new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,dataList);
         listView.setAdapter(adapter);
         return view;
     }
@@ -88,10 +86,10 @@ public class ChooseAreaFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(currentLevel==LEVEL_PROVINCE){
                     selectedProvince=provinceList.get(position);
-
+                    queryCities();
                 }else if(currentLevel==LEVEL_CITY){
                     selectedCity=cityList.get(position);
-
+                    queryCounties();
                 }
             }
         });
@@ -99,12 +97,13 @@ public class ChooseAreaFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(currentLevel==LEVEL_COUNTY){
-
+                    queryCities();
                 }else if(currentLevel==LEVEL_CITY){
-
+                    queryProvinces();
                 }
             }
         });
+        queryProvinces();
     }
 
     private void queryProvinces(){
@@ -121,14 +120,14 @@ public class ChooseAreaFragment extends Fragment {
             currentLevel=LEVEL_PROVINCE;
         }else{
             String address="http://guolin.tech/api/china";
-
+            queryFromServer(address,"province");
         }
     }
 
     private void queryCities(){
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
-        cityList= DataSupport.where("provinceId=?",String.valueOf(selectedProvince.getId())).find(City.class);
+        cityList= DataSupport.where("provinceid=?",String.valueOf(selectedProvince.getId())).find(City.class);
         if(cityList.size()>0){
             dataList.clear();
             for(City city:cityList){
@@ -138,8 +137,9 @@ public class ChooseAreaFragment extends Fragment {
             listView.setSelection(0);
             currentLevel=LEVEL_CITY;
         }else{
-            String address="http://guolin.tech/api/china/"+selectedProvince.getProvinceCode();
-
+            int provinceCode=selectedProvince.getProvinceCode();
+            String address="http://guolin.tech/api/china/"+provinceCode;
+            queryFromServer(address,"city");
         }
     }
 
@@ -159,7 +159,7 @@ public class ChooseAreaFragment extends Fragment {
             int provinceCode=selectedProvince.getProvinceCode();
             int cityCode=selectedCity.getCityCode();
             String address="http://guolin.tech/api/china/"+provinceCode+"/"+cityCode;
-
+            queryFromServer(address,"county");
         }
     }
 
